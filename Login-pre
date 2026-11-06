@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animated Login</title>
+  <style>
+    :root {
+      --purple: #7c3aed;
+      --purple-deep: #4c1d95;
+      --blue: #38bdf8;
+      --blue-light: #bae6fd;
+      --white: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 20px;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+    }
+
+    /* Half purple / half light-blue animated background */
+    .split-bg {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      z-index: -2;
+      overflow: hidden;
+    }
+
+    .half {
+      width: 50%;
+      height: 100%;
+      background-size: 220% 220%;
+      animation: gradientMove 14s ease infinite;
+    }
+
+    .purple {
+      background: linear-gradient(135deg, #4c1d95, #7c3aed, #a855f7, #6d28d9);
+    }
+
+    .blue {
+      background: linear-gradient(135deg, #0ea5e9, #7dd3fc, #bae6fd, #38bdf8);
+    }
+
+    .split-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(255,255,255,.20), transparent 38%),
+        radial-gradient(circle at 82% 78%, rgba(255,255,255,.22), transparent 40%),
+        linear-gradient(90deg, rgba(76,29,149,.18), rgba(14,165,233,.10));
+      mix-blend-mode: soft-light;
+      animation: pulseGlow 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    /* Floating animated shapes */
+    .floating-shapes {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.25);
+      backdrop-filter: blur(4px);
+      animation: floatShape 12s ease-in-out infinite;
+    }
+
+    .s1 { width: 140px; height: 140px; top: 8%; left: 6%; animation-delay: -2s; }
+    .s2 { width: 90px; height: 90px; bottom: 12%; right: 8%; animation-delay: -5s; }
+    .s3 { width: 46px; height: 46px; top: 60%; left: 42%; animation-delay: -7s; }
+    .s4 { width: 180px; height: 180px; bottom: -40px; left: 18%; opacity: .5; animation-delay: -9s; }
+    .s5 { width: 70px; height: 70px; top: 18%; right: 22%; opacity: .7; animation-delay: -3s; }
+
+    /* Glass login card */
+    .login-card {
+      position: relative;
+      width: min(92vw, 390px);
+      padding: 34px 30px 28px;
+      border-radius: 34px;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.42);
+      box-shadow:
+        0 30px 80px rgba(15,23,42,.35),
+        inset 0 1px 0 rgba(255,255,255,.55);
+      backdrop-filter: blur(22px) saturate(145%);
+      -webkit-backdrop-filter: blur(22px) saturate(145%);
+      text-align: center;
+      animation: cardIn .9s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    /* Empty rounded blank panel */
+    .blank {
+      position: relative;
+      width: 100%;
+      height: 92px;
+      border-radius: 26px;
+      overflow: hidden;
+      margin-bottom: 22px;
+      background: linear-gradient(135deg, rgba(255,255,255,.68), rgba(255,255,255,.18));
+      border: 1px solid rgba(255,255,255,.72);
+      box-shadow:
+        inset 0 1px 14px rgba(255,255,255,.45),
+        0 10px 28px rgba(76,29,149,.18);
+      animation: blankFloat 4s ease-in-out infinite;
+    }
+
+    .blank::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -60%;
+      width: 45%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent);
+      transform: skewX(-20deg);
+      animation: shimmer 3.2s ease-in-out infinite;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      letter-spacing: -.02em;
+      color: #fff;
+      text-shadow: 0 2px 18px rgba(15,23,42,.35);
+      animation: fadeUp .7s .15s both;
+    }
+
+    .subtitle {
+      margin: 6px 0 24px;
+      color: rgba(255,255,255,.78);
+      font-size: .92rem;
+      animation: fadeUp .7s .22s both;
+    }
+
+    .field {
+      position: relative;
+      margin: 16px 0;
+      text-align: left;
+      animation: fadeUp .7s both;
+    }
+
+    .field:nth-child(4) { animation-delay: .30s; }
+    .field:nth-child(5) { animation-delay: .38s; }
+
+    .field input {
+      width: 100%;
+      padding: 19px 16px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.5);
+      background: rgba(255,255,255,.20);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .3s, background .3s, box-shadow .3s, transform .3s;
+      box-shadow: inset 0 1px 8px rgba(255,255,255,.12);
+    }
+
+    .field input::placeholder { color: transparent; }
+
+    .field label {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,.82);
+      font-size: 1rem;
+      pointer-events: none;
+      transition: all .25s ease;
+    }
+
+    .field input:focus,
+    .field input:not(:placeholder-shown) {
+      border-color: rgba(255,255,255,.9);
+      background: rgba(255,255,255,.28);
+      box-shadow:
+        0 0 0 4px rgba(255,255,255,.15),
+        0 0 26px rgba(168,85,247,.42);
+      transform: translateY(-2px);
+    }
+
+    .field input:focus + label,
+    .field input:not(:placeholder-shown) + label {
+      top: 9px;
+      transform: none;
+      font-size: .66rem;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.95);
+    }
+
+    .line {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #a855f7, #38bdf8);
+      transition: width .35s ease, left .35s ease;
+    }
+
+    .field input:focus ~ .line {
+      width: 80%;
+      left: 10%;
+    }
+
+    .login-btn {
+      position: relative;
+      width: 100%;
+      margin-top: 10px;
+      padding: 15px 18px;
+      border: none;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      cursor: pointer;
+      overflow: hidden;
+      background: linear-gradient(135deg, #7c3aed, #38bdf8);
+      box-shadow:
+        0 12px 30px rgba(56,189,248,.32),
+        0 5px 14px rgba(124,58,237,.35);
+      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+      animation: buttonGlow 3s ease-in-out infinite, buttonFade .7s .46s both;
+    }
+
+    .login-btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -120%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent);
+      transform: skewX(-22deg);
+      transition: left .55s ease;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px) scale(1.015);
+      filter: saturate(1.15);
+      box-shadow:
+        0 16px 38px rgba(56,189,248,.42),
+        0 8px 20px rgba(124,58,237,.42);
+    }
+
+    .login-btn:hover::before { left: 130%; }
+    .login-btn:active { transform: scale(.98); }
+
+    .btn-label {
+      position: relative;
+      z-index: 2;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.45);
+      transform: scale(0);
+      animation: ripple .6s ease-out;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hint {
+      margin: 18px 0 0;
+      color: rgba(255,255,255,.75);
+      font-size: .84rem;
+      cursor: pointer;
+      transition: color .2s, transform .2s;
+      animation: fadeUp .7s .54s both;
+    }
+
+    .hint:hover {
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    @keyframes gradientMove {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: .75; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes floatShape {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(18px, -28px, 0) scale(1.08); }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(34px) scale(.94) rotateX(7deg); }
+      to { opacity: 1; transform: translateY(0) scale(1) rotateX(0); }
+    }
+
+    @keyframes blankFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes shimmer {
+      0% { left: -60%; }
+      60%, 100% { left: 120%; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes buttonFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes buttonGlow {
+      0%, 100% {
+        box-shadow:
+          0 12px 30px rgba(56,189,248,.32),
+          0 5px 14px rgba(124,58,237,.35);
+      }
+      50% {
+        box-shadow:
+          0 16px 42px rgba(56,189,248,.48),
+          0 8px 22px rgba(124,58,237,.48);
+      }
+    }
+
+    @keyframes ripple {
+      to { transform: scale(2.8); opacity: 0; }
+    }
+
+    @media (max-width: 420px) {
+      .login-card { padding: 28px 22px 24px; border-radius: 28px; }
+      .blank { height: 78px; border-radius: 22px; }
+      h1 { font-size: 1.45rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="split-bg" aria-hidden="true">
+    <div class="half purple"></div>
+    <div class="half blue"></div>
+  </div>
+
+  <div class="floating-shapes" aria-hidden="true">
+    <span class="shape s1"></span>
+    <span class="shape s2"></span>
+    <span class="shape s3"></span>
+    <span class="shape s4"></span>
+    <span class="shape s5"></span>
+  </div>
+
+  <main>
+    <form class="login-card" id="loginForm" novalidate>
+      <div class="blank" aria-hidden="true"></div>
+
+      <h1>Welcome back</h1>
+      <p class="subtitle">Sign in to continue</p >
+
+      <div class="field">
+        <input id="login" name="login" type="text" placeholder=" " autocomplete="username" required />
+        <label for="login">Login</label>
+        <span class="line"></span>
+      </div>
+
+      <div class="field">
+        <input id="password" name="password" type="password" placeholder=" " autocomplete="current-password" required />
+        <label for="password">Password</label>
+        <span class="line"></span>
+      </div>
+
+      <button class="login-btn" type="submit">
+        <span class="btn-label">Sign In</span>
+      </button>
+
+      <p class="hint">Forgot password?</p >
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const button = form.querySelector(".login-btn");
+    const buttonLabel = button.querySelector(".btn-label");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      button.disabled = true;
+      buttonLabel.textContent = "Signing in...";
+
+      setTimeout(() => {
+        button.disabled = false;
+        buttonLabel.textContent = "Sign In";
+        alert("Demo login page — connect this form to your authentication backend.");
+      }, 900);
+    });
+
+    button.addEventListener("click", (event) => {
+      const rect = button.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const ripple = document.createElement("span");
+
+      ripple.className = "ripple";
+      ripple.style.width = ripple.style.height = `${size}px`;
+      ripple.style.left = `${event.clientX - rect.left - size / 2}px`;
+      ripple.style.top = `${event.clientY - rect.top - size / 2}px`;
+
+      button.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 650);
+    });
+  </script>
+</body>
+</html>
